@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title></title>
+    <meta name="description" content="Description">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <style>
+      canvas {
+          outline: 1px black solid;
+          display: block;
+          background-color: black;
+          position: absolute;
+          top: 0;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          margin: auto;
+      }
+    </style>
+	 <script>
+    document.write('<script src="'+ (window.API_URL || 'https://s1.adform.net/banners/scripts/rmb/Adform.DHTML.js?bv='+ Math.random()) +'"><\/script>');
+    </script>
+</head>
+
+<body>
+
+<canvas id="game" width="300" height="300"></canvas>
+
+</body>
+<script>
+var canvas = document.getElementById('game');
+var context = canvas.getContext('2d');
+var size = 20;
+var blocks = [];
+
+
+
+
+var deltaX = size;
+var deltaY = 0;
+
+var gameOver = false;
+
+function Block(x, y, name) {
+  this.name = name;
+  this.x = x;
+  this.y = y;
+}
+
+function overlap(x1, y1, w1, h1, x2, y2, w2, h2) {
+  return !(((x1 + w1 - 1) < x2) ||
+          ((x2 + w2 - 1) < x1) ||
+          ((y1 + h1 - 1) < y2) ||
+          ((y2 + h2 - 1) < y1));
+}
+
+function detectCollision() {
+  var lastElement = blocks[blocks.length - 1];
+
+  //take last element and check by remaining
+  blocks.slice(0, -1).forEach(function(b) {
+
+    if ( overlap(lastElement.x, lastElement.y, size, size, b.x, b.y, size, size) ) {
+      gameOver = true;
+    }
+
+    // if (lastElement.x === b.x && lastElement.y === b.y) {
+    //   gameOver = true;
+    // }
+  });
+
+  return gameOver;
+}
+
+
+function drawBlocks() {
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  blocks.forEach(function(b) {
+      context.beginPath();
+      context.rect(b.x, b.y, size, size);
+      context.fillStyle = 'yellow';
+      context.fill();
+      context.lineWidth = 2;
+      context.strokeStyle = 'red';
+      context.stroke();
+    });
+}
+
+blocks.push( new Block(0, 0, 'mister') );
+blocks.push( new Block(size, 0, 'roboto') );
+blocks.push( new Block(size * 2, 0, 'ou') );
+blocks.push( new Block(size * 3, 0, 'yeah') );
+// blocks.push( new Block(size * 4, 0, 'yeah') );
+// blocks.push( new Block(size * 5, 0, 'yeah') );
+// blocks.push( new Block(size * 6, 0, 'yeah') );
+
+// var currentX = size * 3;
+// var currentY = 0;
+// var currentDirection = 'right';
+
+
+var motion = {
+  x: size * (blocks.length - 1),
+  y: 0,
+  direction: 'right',
+
+  get currentDirection() {
+    return this.direction;
+  },
+
+  set currentDirection(d) {
+    this.direction = d;
+  },
+
+  get currentX() {
+    return this.x;
+  },
+
+  set currentX(x) {
+    this.x += x;
+  },
+
+  get currentY() {
+    return this.y;
+  },
+
+  set currentY(y) {
+    this.y += y;
+  }
+};
+
+
+
+//update last element to new postion
+
+var frameRate = 5;
+var frameLength = Math.round( 1000 / frameRate ); // this is ~1/30th of a second, in milliseconds (1000/30)
+var lastFrame = 0;
+
+var render = function() {
+  if(Date.now() - lastFrame > frameLength) {
+    lastFrame = Date.now();
+
+    // run your 30fps code here...
+
+    //detect collision
+    if (gameOver) {
+      alert('game over');
+      return;
+    }
+
+    
+
+    
+
+
+    motion.currentX = deltaX;
+    motion.currentY = deltaY;
+
+    console.log(motion.currentX);
+
+    if (motion.currentX + size > canvas.width) motion.currentX = 0;
+    if (motion.currentX < 0) motion.currentX = canvas.width;
+
+    if (motion.currentY + size > canvas.height) motion.currentY = 0;
+    if (motion.currentY < 0) motion.currentY = canvas.height;
+
+
+    blocks[0].x = motion.currentX;
+    blocks[0].y = motion.currentY;
+
+    var shifted = blocks.shift();
+
+    blocks.push(shifted);
+
+    if ( !detectCollision() ) drawBlocks();
+
+    
+
+  }
+  
+  requestAnimationFrame(render);
+};
+
+requestAnimationFrame(render);
+
+window.addEventListener('keydown', function(e) {
+  
+
+  if (e.keyCode === 38) {
+    //go up
+    if (motion.currentDirection === 'up' || motion.currentDirection === 'down') return;
+
+    motion.currentDirection = 'up';
+
+    deltaX = 0;
+    deltaY = -size;
+  }
+  
+  if (e.keyCode === 40) {
+    //go down
+    if (motion.currentDirection === 'up' || motion.currentDirection === 'down') return;
+
+    motion.currentDirection = 'down';
+    deltaX = 0;
+    deltaY = size;
+
+  }
+
+  if (e.keyCode === 37) {
+    //go left
+    if (motion.currentDirection === 'left' || motion.currentDirection === 'right') return;
+
+    motion.currentDirection = 'left';
+
+    deltaX = -size;
+    deltaY = 0;
+  }
+
+  if (e.keyCode === 39) {
+    //go right
+    if (motion.currentDirection === 'left' || motion.currentDirection === 'right') return;
+
+    motion.currentDirection = 'right';
+
+    deltaX = size;
+    deltaY = 0;
+  }
+
+  console.log(motion.currentDirection);
+
+});
+
+
+
+</script>
+</html>
