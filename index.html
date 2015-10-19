@@ -27,12 +27,18 @@
 
 <body>
 
-<canvas id="game" width="300" height="300"></canvas>
+<canvas id="game" width="400" height="400"></canvas>
 
 </body>
 <script>
 var canvas = document.getElementById('game');
 var context = canvas.getContext('2d');
+var gameWidth = 300;
+var gameHeight = 300;
+
+var gameX = canvas.width / 2 - gameWidth / 2;
+var gameY = canvas.height / 2 - gameHeight / 2;
+
 var size = 20;
 var blocks = [];
 
@@ -50,11 +56,126 @@ function Block(x, y, name) {
   this.y = y;
 }
 
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min + 1)) + min;
+}
+
+var Spawn = (function(){
+  var x, y;
+
+  var validXY = (function(){
+
+    // store all combinations??
+    var arr = [];
+
+    for (var i = 0; i < gameWidth; i += size) {
+      
+
+      for (var y = 0; y < gameHeight; y += size) {
+
+
+        arr.push( { x: i, y: y } );
+      }
+    }
+
+
+    // var arr = [];
+    // for (var i = 0; i < gameWidth; i += size) {
+    //   arr.push( i );
+    // }
+
+    return arr;
+  })();
+
+ 
+  //iterate over blocks and check their x, y
+  
+  // function getXY() {
+  //   console.log()
+  // }
+  
+
+  // x = validXY[ getRandom() ].x;
+  // y = validXY[ getRandom() ].y;
+
+  function getRandom(max) {
+    return Math.floor(Math.random() * max);
+  }
+  
+
+  function update() {
+
+    // var newArr = validXY.filter(function(pos) {
+    //   console.log(pos.x, pos.y);
+    // });
+
+    var occupiedValues = [];
+
+    blocks.forEach(function(b) {
+      // console.log(b.x, b.y);
+      occupiedValues.push( b.x + ' ' + b.y );
+    });
+
+    var newArr = validXY.filter(function(pos) {
+  
+      return occupiedValues.indexOf( pos.x + ' ' + pos.y ) === -1;
+
+    });
+
+    x = newArr[ getRandom( newArr.length ) ].x;
+    y = newArr[ getRandom( newArr.length ) ].y;
+
+
+  }
+
+  update();
+
+  function getPos() {
+    return { x: x, y: y };
+  }
+
+
+  //300x300
+  // size = 20
+
+  //15 x 15 kwadrat
+
+  //generate number from 0 14 two times
+
+  //generate x, y,
+    //cannot overlap with blocks
+
+  //update position
+
+  return {
+    update: update,
+    position: getPos
+  };
+})();
+
 function overlap(x1, y1, w1, h1, x2, y2, w2, h2) {
   return !(((x1 + w1 - 1) < x2) ||
           ((x2 + w2 - 1) < x1) ||
           ((y1 + h1 - 1) < y2) ||
           ((y2 + h2 - 1) < y1));
+}
+
+function ateSpawn() {
+  var lastElement = blocks[blocks.length - 1];
+
+  if ( overlap(lastElement.x, lastElement.y, size, size, Spawn.position().x, Spawn.position().y, size, size) ) {
+      
+    // console.log(motion.currentX, motion.currentY);
+
+    // console.log(Spawn.position().x, Spawn.position().y);
+
+    blocks.push( new Block( motion.currentX, motion.currentY ) );
+
+    Spawn.update();
+
+
+  }
+
 }
 
 function detectCollision() {
@@ -80,15 +201,34 @@ function drawBlocks() {
 
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  blocks.forEach(function(b) {
+  context.save();
+  context.translate(gameX, gameY);
+
+  context.save();
+  context.fillStyle = "green";
+  context.fillRect(0 , 0, gameWidth, gameHeight);
+  context.restore();
+
+
+
+  blocks.forEach(function(b, index) {
       context.beginPath();
       context.rect(b.x, b.y, size, size);
-      context.fillStyle = 'yellow';
+
+      context.fillStyle = (index === blocks.length - 1)  ? 'red' : 'yellow';
+
+      
       context.fill();
       context.lineWidth = 2;
       context.strokeStyle = 'red';
       context.stroke();
     });
+
+  //draw spawner 
+  context.fillStyle = 'blue';
+  context.fillRect( Spawn.position().x, Spawn.position().y, size, size );
+
+  context.restore();
 }
 
 blocks.push( new Block(0, 0, 'mister') );
@@ -122,7 +262,7 @@ var motion = {
   },
 
   set currentX(x) {
-    this.x += x;
+    this.x = x;
   },
 
   get currentY() {
@@ -130,7 +270,7 @@ var motion = {
   },
 
   set currentY(y) {
-    this.y += y;
+    this.y = y;
   }
 };
 
@@ -141,6 +281,7 @@ var motion = {
 var frameRate = 5;
 var frameLength = Math.round( 1000 / frameRate ); // this is ~1/30th of a second, in milliseconds (1000/30)
 var lastFrame = 0;
+var isRendering = false;
 
 var render = function() {
   if(Date.now() - lastFrame > frameLength) {
@@ -156,19 +297,22 @@ var render = function() {
 
     
 
+     
     
 
 
-    motion.currentX = deltaX;
-    motion.currentY = deltaY;
+    motion.currentX += deltaX;
+    motion.currentY += deltaY;
 
-    console.log(motion.currentX);
 
-    if (motion.currentX + size > canvas.width) motion.currentX = 0;
-    if (motion.currentX < 0) motion.currentX = canvas.width;
+    if (motion.currentX + size > gameWidth) motion.currentX = 0;
+    if (motion.currentX < 0) motion.currentX = gameWidth - size;
 
-    if (motion.currentY + size > canvas.height) motion.currentY = 0;
-    if (motion.currentY < 0) motion.currentY = canvas.height;
+
+
+
+    if (motion.currentY + size > gameHeight) motion.currentY = 0;
+    if (motion.currentY < 0) motion.currentY = gameHeight - size;
 
 
     blocks[0].x = motion.currentX;
@@ -178,9 +322,15 @@ var render = function() {
 
     blocks.push(shifted);
 
-    if ( !detectCollision() ) drawBlocks();
-
+   
+    drawBlocks();
     
+
+    detectCollision();
+
+    ateSpawn();
+
+    isRendering = false;
 
   }
   
@@ -190,7 +340,12 @@ var render = function() {
 requestAnimationFrame(render);
 
 window.addEventListener('keydown', function(e) {
-  
+  if (isRendering) {
+    console.log('stop dat bullshit');
+    return;
+  }
+
+  isRendering = true;
 
   if (e.keyCode === 38) {
     //go up
@@ -232,10 +387,14 @@ window.addEventListener('keydown', function(e) {
     deltaY = 0;
   }
 
-  console.log(motion.currentDirection);
 
 });
 
+// whats the problem?
+
+//problem is that deltaX and deltaY are changed even though view is not rendered
+
+// what we can do?
 
 
 </script>
