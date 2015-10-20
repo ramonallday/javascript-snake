@@ -99,6 +99,7 @@ var gameOver = false;
 //colors
 var color = {
   snake: '#86ce00',
+  snakeHead: '#629600', 
   background: '#006395',
   spawn: '#f9df05'
 };
@@ -251,9 +252,9 @@ function drawBlocks() {
       context.beginPath();
       context.rect(b.x, b.y, size, size);
 
-      // context.fillStyle = (index === blocks.length - 1)  ? color.snake : 'yellow';
+      context.fillStyle = (index === blocks.length - 1)  ? color.snakeHead : color.snake;
 
-      context.fillStyle = color.snake;
+      // context.fillStyle = color.snake;
 
       
       context.fill();
