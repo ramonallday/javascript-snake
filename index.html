@@ -7,37 +7,83 @@
     <title></title>
     <meta name="description" content="Description">
     <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans' rel='stylesheet' type='text/css'>
     <style>
+      * {
+        margin: 0;
+      }
+
+      html, body {
+        width: 100%;
+        height: 100%;
+      }
+
+      body {
+        background-color: #003b59;
+        font-family: 'Open Sans', sans-serif;
+        color: white;
+        font-size: 16px;
+      } 
+
       canvas {
-          outline: 1px black solid;
-          display: block;
-          background-color: black;
-          position: absolute;
-          top: 0;
-          bottom: 0;
-          left: 0;
-          right: 0;
-          margin: auto;
+          display: inline-block;
+      }
+
+      .vcenter {
+        display: table;
+        width: 100%; 
+        height: 100%;
+        text-align: center;
+      }
+
+      .vcell {
+        display: table-cell;
+        vertical-align: middle;
+      }
+
+      #controls {
+        margin-top: 20px;
+      }
+
+      .controls {
+        display: inline-block;
+        background-color: white;
+        color: #003b59;
+        min-width: 20px;
+        padding: 5px 10px;
+        margin: 0 5px;
+        cursor: pointer;
       }
     </style>
-	 <script>
-    document.write('<script src="'+ (window.API_URL || 'https://s1.adform.net/banners/scripts/rmb/Adform.DHTML.js?bv='+ Math.random()) +'"><\/script>');
-    </script>
 </head>
 
 <body>
 
-<canvas id="game" width="400" height="400"></canvas>
+<div class="vcenter">
+  <div class="vcell">
+    <div id="content">
+      <canvas id="game" width="400" height="400"></canvas>
+    </div>
+    <div id="score">0</div>
+    <div id="controls"></div>
+  </div>
+</div>
 
 </body>
 <script>
+
+var controlsElement = document.getElementById('controls');
+var controls = [];
+var scoreElement = document.getElementById('score');
 var canvas = document.getElementById('game');
 var context = canvas.getContext('2d');
-var gameWidth = 300;
-var gameHeight = 300;
+var gameWidth = 400;
+var gameHeight = 400;
 
 var gameX = canvas.width / 2 - gameWidth / 2;
 var gameY = canvas.height / 2 - gameHeight / 2;
+
+var score = 0;
 
 var size = 20;
 var blocks = [];
@@ -49,6 +95,13 @@ var deltaX = size;
 var deltaY = 0;
 
 var gameOver = false;
+
+//colors
+var color = {
+  snake: '#86ce00',
+  background: '#006395',
+  spawn: '#f9df05'
+};
 
 function Block(x, y, name) {
   this.name = name;
@@ -89,14 +142,6 @@ var Spawn = (function(){
 
  
   //iterate over blocks and check their x, y
-  
-  // function getXY() {
-  //   console.log()
-  // }
-  
-
-  // x = validXY[ getRandom() ].x;
-  // y = validXY[ getRandom() ].y;
 
   function getRandom(max) {
     return Math.floor(Math.random() * max);
@@ -105,14 +150,9 @@ var Spawn = (function(){
 
   function update() {
 
-    // var newArr = validXY.filter(function(pos) {
-    //   console.log(pos.x, pos.y);
-    // });
-
     var occupiedValues = [];
 
     blocks.forEach(function(b) {
-      // console.log(b.x, b.y);
       occupiedValues.push( b.x + ' ' + b.y );
     });
 
@@ -128,24 +168,12 @@ var Spawn = (function(){
 
   }
 
-  update();
-
   function getPos() {
     return { x: x, y: y };
   }
 
-
-  //300x300
-  // size = 20
-
-  //15 x 15 kwadrat
-
-  //generate number from 0 14 two times
-
-  //generate x, y,
-    //cannot overlap with blocks
-
   //update position
+  update();
 
   return {
     update: update,
@@ -173,7 +201,8 @@ function ateSpawn() {
 
     Spawn.update();
 
-
+    score += levels.reward[frameRate];
+    scoreElement.innerHTML = score; 
   }
 
 }
@@ -205,43 +234,41 @@ function drawBlocks() {
   context.translate(gameX, gameY);
 
   context.save();
-  context.fillStyle = "green";
+  context.fillStyle = color.background;
   context.fillRect(0 , 0, gameWidth, gameHeight);
   context.restore();
 
+
+
+  
+
+  //draw spawner 
+  context.fillStyle = color.spawn;
+  context.fillRect( Spawn.position().x, Spawn.position().y, size, size );
 
 
   blocks.forEach(function(b, index) {
       context.beginPath();
       context.rect(b.x, b.y, size, size);
 
-      context.fillStyle = (index === blocks.length - 1)  ? 'red' : 'yellow';
+      // context.fillStyle = (index === blocks.length - 1)  ? color.snake : 'yellow';
+
+      context.fillStyle = color.snake;
 
       
       context.fill();
-      context.lineWidth = 2;
-      context.strokeStyle = 'red';
-      context.stroke();
+      // context.lineWidth = 2;
+      // context.strokeStyle = 'red';
+      // context.stroke();
     });
-
-  //draw spawner 
-  context.fillStyle = 'blue';
-  context.fillRect( Spawn.position().x, Spawn.position().y, size, size );
 
   context.restore();
 }
 
-blocks.push( new Block(0, 0, 'mister') );
-blocks.push( new Block(size, 0, 'roboto') );
-blocks.push( new Block(size * 2, 0, 'ou') );
-blocks.push( new Block(size * 3, 0, 'yeah') );
-// blocks.push( new Block(size * 4, 0, 'yeah') );
-// blocks.push( new Block(size * 5, 0, 'yeah') );
-// blocks.push( new Block(size * 6, 0, 'yeah') );
-
-// var currentX = size * 3;
-// var currentY = 0;
-// var currentDirection = 'right';
+blocks.push( new Block(0, 0) );
+blocks.push( new Block(size, 0) );
+blocks.push( new Block(size * 2, 0) );
+blocks.push( new Block(size * 3, 0) );
 
 
 var motion = {
@@ -274,11 +301,38 @@ var motion = {
   }
 };
 
+var levels = (function(){
+  var reward = [];
 
+  for (var i = 1, index = 5; i <= 12; i++, index++) {
+    reward[index] = i;
+
+    var el = document.createElement('span');
+    el.className = 'controls';
+    el.setAttribute('data-id', index);
+    el.innerHTML = i;
+
+    controlsElement.appendChild(el);
+
+    controls.pop(el);
+
+    el.addEventListener('click', function() {
+      frameRate = this.getAttribute('data-id');
+      frameLength = Math.round( 1000 / frameRate );
+    });
+  }
+  
+
+  return {
+    reward: reward
+  };
+
+})(); 
 
 //update last element to new postion
 
-var frameRate = 5;
+
+var frameRate = 10;
 var frameLength = Math.round( 1000 / frameRate ); // this is ~1/30th of a second, in milliseconds (1000/30)
 var lastFrame = 0;
 var isRendering = false;
